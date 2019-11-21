@@ -48,7 +48,8 @@ int main()
 
         // Receive the data(steering angle) from pi 4 channel
         if ( ser_isready(1) ){
-            double data = ser_read(1);
+            double angle = ser_read(1);
+            ser_write(0,angle);
             //Lab5: servo motor control
             int gpio = PIN_19;
             gpio_mode(gpio, OUTPUT); 
@@ -66,16 +67,17 @@ int main()
                 for (int i = 0 ; i < 5 ; i++){
                 // ser_read() 5 times to read data frame that is not used in lab
                 ser_read(0);
-                }               
+                }  
+                //turn on the red light if the distance is less than 50cm
+                if (dist < 50) {
+                    gpio_write(ledArr[0], OFF);
+                    gpio_write(ledArr[1], OFF);
+                    gpio_write(ledArr[2], OFF);
+                    gpio_write(ledArr[1],ON); // red ==stop  
+                    break;
+                }                
             }
-            //turn on the red light if the distance is less than 50cm
-            if (dist < 50) {
-                gpio_write(ledArr[0], OFF);
-                gpio_write(ledArr[1], OFF);
-                gpio_write(ledArr[2], OFF);
-                gpio_write(ledArr[1],ON); // red ==stop  
-                break;
-            }
+            
 
             /* control the servor for 1 sec duration */
             if (angle < (-30) ) {
@@ -92,7 +94,8 @@ int main()
                 gpio_write(ledArr[0], ON);
                 gpio_write(ledArr[1], ON);
                 gpio_write(ledArr[2], ON);//white==center
-            }           
+            }      
+            servo(gpio,angle);     
         }
     }
 }
