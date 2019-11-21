@@ -6,7 +6,7 @@
 #define SERVO_PULSE_MAX 2400    /* 2400 us */
 #define SERVO_PULSE_MIN 544     /* 544 us */
 #define SERVO_PERIOD    20000   /* 20000 us (20ms) */
-
+#include <stdlib.h> //strtod
 void servo(int gpio, int pos)
 {
     //the formula of pulse
@@ -18,7 +18,6 @@ void servo(int gpio, int pos)
     gpio_write(gpio,OFF);
     delay_usec(SERVO_PERIOD - pulse);
 }
-
 int main()
 {
     // initialize UART channels
@@ -45,11 +44,23 @@ int main()
     //Generate a pwm signal , @gpio   gpio number, @pos    degree [0,180]
     int dist ;
     while (1) {
-
         // Receive the data(steering angle) from pi 4 channel
         if ( ser_isready(1) ){
-            double angle = ser_read(1);
-            ser_write(0,angle);
+            char bytes1 = ser_read(1); 
+            ser_write(0,bytes1);
+            char bytes2 = ser_read(1);
+            ser_write(0,bytes2);
+            char bytes3 = ser_read(1);
+            ser_write(0,bytes3);
+            char bytes4 = ser_read(1);
+            ser_write(0,bytes4);
+            printf("1)%c | 2)%c |3) %c |4) %c",bytes1,bytes2,bytes3,bytes4);
+            
+
+            //convert bytes to (float) angle
+            // float angle = strtod(bytes,NULL);
+            float angle = atof(bytes1);
+            printf("%f",angle);
             //Lab5: servo motor control
             int gpio = PIN_19;
             gpio_mode(gpio, OUTPUT); 
@@ -62,7 +73,7 @@ int main()
                 int16_t d2 = ser_read(0);
                 //formula to make the distance into a 16 bit
                 dist = (d2 << 8) | d1;
-                printf("distance is %d",dist);
+                printf("distance is %d cm\n",dist);
                 
                 for (int i = 0 ; i < 5 ; i++){
                 // ser_read() 5 times to read data frame that is not used in lab
@@ -78,25 +89,29 @@ int main()
                 }                
             }
             
-
+            
             /* control the servor for 1 sec duration */
             if (angle < (-30) ) {
                 gpio_write(ledArr[0], OFF);
                 gpio_write(ledArr[1], OFF);
                 gpio_write(ledArr[2], OFF);
                 gpio_write(ledArr[2], ON); //blue==left
+                servo(gpio,angle); 
             } else if (angle > (30)) {
                 gpio_write(ledArr[0], OFF);
                 gpio_write(ledArr[1], OFF);
                 gpio_write(ledArr[2], OFF);
                 gpio_write(ledArr[0], ON);//green==right
+                servo(gpio,angle); 
             } else {
                 gpio_write(ledArr[0], ON);
                 gpio_write(ledArr[1], ON);
                 gpio_write(ledArr[2], ON);//white==center
+                servo(gpio,angle); 
             }      
-            servo(gpio,angle);     
+                
         }
     }
 }
+
 
